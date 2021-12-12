@@ -11,6 +11,7 @@ router.get("/", async (req, res, next) => {
       return res.sendStatus(401);
     }
     const userId = req.user.id;
+    //set message createdAt order direction to Ascending to show older messages start from top
     const conversations = await Conversation.findAll({
       where: {
         [Op.or]: {
