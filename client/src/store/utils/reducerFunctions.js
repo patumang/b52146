@@ -2,13 +2,15 @@ export const addMessageToStore = (state, payload) => {
   const { message, sender } = payload;
   // if sender isn't null, that means the message needs to be put in a brand new convo
   if (sender !== null) {
+    //remove fakeconversation if already exist for the current sender
+    const newState = state.filter((convo) => convo.otherUser.id !== sender.id);
     const newConvo = {
       id: message.conversationId,
       otherUser: sender,
       messages: [message],
     };
     newConvo.latestMessageText = message.text;
-    return [newConvo, ...state];
+    return [newConvo, ...newState];
   }
 
   return state.map((convo) => {
