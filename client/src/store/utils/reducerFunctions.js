@@ -16,11 +16,15 @@ export const addMessageToStore = (state, payload) => {
   return state.map((convo) => {
     if (convo.id === message.conversationId) {
       //use immutable approach to store new message to existing conversations
-      return { ...convo, messages: [...convo.messages, message], latestMessageText: message.text}
+      const convoCopy = { ...convo };
+      convoCopy.messages = [...convoCopy.messages, message ];
+      convoCopy.latestMessageText = message.text;
+      return convoCopy;
     } else {
       return convo;
     }
   });
+  
 };
 
 export const addOnlineUserToStore = (state, id) => {
@@ -71,7 +75,11 @@ export const addNewConvoToStore = (state, recipientId, message) => {
   return state.map((convo) => {
     if (convo.otherUser.id === recipientId) {
       //use immutable approach to store new conversation to existing conversations
-      return { ...convo, id: message.conversationId, messages: [...convo.messages, message], latestMessageText: message.text }
+      const convoCopy = { ...convo };
+      convoCopy.id = message.conversationId;
+      convoCopy.messages = [...convoCopy.messages, message];
+      convoCopy.latestMessageText = message.text;
+      return convoCopy;
     } else {
       return convo;
     }
