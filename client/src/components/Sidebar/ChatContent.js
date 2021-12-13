@@ -1,12 +1,14 @@
 import React from "react";
-import { Box, Typography } from "@material-ui/core";
+import { Box, Typography, Chip } from "@material-ui/core";
 import { makeStyles } from "@material-ui/core/styles";
 
 const useStyles = makeStyles((theme) => ({
   root: {
     display: "flex",
     justifyContent: "space-between",
+    alignItems: "center",
     marginLeft: 20,
+    marginRight: 20,
     flexGrow: 1,
   },
   username: {
@@ -18,6 +20,10 @@ const useStyles = makeStyles((theme) => ({
     color: "#9CADC8",
     letterSpacing: -0.17,
   },
+  unreadCounter: {
+    fontSize: 10,
+    fontWeight: 600
+  }
 }));
 
 const ChatContent = (props) => {
@@ -35,6 +41,9 @@ const ChatContent = (props) => {
         <Typography className={classes.previewText}>
           {latestMessageText}
         </Typography>
+      </Box>
+      <Box>
+        <Chip className={classes.unreadCounter} size="small" color="primary" label="1" />
       </Box>
     </Box>
   );
