@@ -11,7 +11,6 @@ router.get("/", async (req, res, next) => {
       return res.sendStatus(401);
     }
     const userId = req.user.id;
-    //set message createdAt order direction to Ascending to show older messages start from top
     const conversations = await Conversation.findAll({
       where: {
         [Op.or]: {
@@ -20,9 +19,9 @@ router.get("/", async (req, res, next) => {
         },
       },
       attributes: ["id"],
-      order: [[Message, "createdAt", 'ASC']],
+      order: [[Message, "createdAt", 'DESC']],
       include: [
-        { model: Message, order: ["createdAt", 'ASC'] },
+        { model: Message },
         {
           model: User,
           as: "user1",
@@ -51,6 +50,12 @@ router.get("/", async (req, res, next) => {
     for (let i = 0; i < conversations.length; i++) {
       const convo = conversations[i];
       const convoJSON = convo.toJSON();
+
+      //sort messages by createdAt in ascending order
+      //and if createdAt is same then sort by id to show older messages start from top
+      convoJSON.messages.sort(function(a, b) {
+        return new Date(a.createdAt) - new Date(b.createdAt) ||  a.id - b.id;
+      });
 
       // set a property "otherUser" so that frontend will have easier access
       if (convoJSON.user1) {
