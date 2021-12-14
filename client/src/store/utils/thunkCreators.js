@@ -5,6 +5,7 @@ import {
   addConversation,
   setNewMessage,
   setSearchedUsers,
+  updateUnreads
 } from "../conversations";
 import { gotUser, setFetchingStatus } from "../user";
 import { setActiveChat } from "../activeConversation";
@@ -87,7 +88,6 @@ const saveMessage = async (body) => {
 const sendMessage = (data, body) => {
   socket.emit("new-message", {
     message: data.message,
-    recipientId: body.recipientId,
     sender: data.sender,
   });
 };
@@ -103,7 +103,6 @@ export const postMessage = (body) => async (dispatch) => {
     } else {
       dispatch(setNewMessage(data.message));
     }
-
     sendMessage(data, body);
   } catch (error) {
     console.error(error);
@@ -124,6 +123,7 @@ export const resetUnreads = (conversation) => async (dispatch) => {
   try {
     if(conversation.unreads > 0) {
       const data = await axios.post("/api/conversations/reset_unreads", { id: conversation.id });
+      dispatch(updateUnreads(conversation));
     }
     dispatch(setActiveChat(conversation.otherUser.username));
   } catch (error) {
