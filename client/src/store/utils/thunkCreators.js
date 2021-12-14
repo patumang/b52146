@@ -7,6 +7,7 @@ import {
   setSearchedUsers,
 } from "../conversations";
 import { gotUser, setFetchingStatus } from "../user";
+import { setActiveChat } from "../activeConversation";
 
 axios.interceptors.request.use(async function (config) {
   const token = await localStorage.getItem("messenger-token");
@@ -113,6 +114,18 @@ export const searchUsers = (searchTerm) => async (dispatch) => {
   try {
     const { data } = await axios.get(`/api/users/${searchTerm}`);
     dispatch(setSearchedUsers(data));
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+
+export const resetUnreads = (conversation) => async (dispatch) => {
+  try {
+    if(conversation.unreads > 0) {
+      const data = await axios.post("/api/conversations/reset_unreads", { id: conversation.id });
+    }
+    dispatch(setActiveChat(conversation.otherUser.username));
   } catch (error) {
     console.error(error);
   }
