@@ -74,10 +74,8 @@ router.get("/", async (req, res, next) => {
       // set properties for notification count and latest message preview
       convoJSON.latestMessageText = convoJSON.messages[0].text;
 
-      //sort messages by createdAt in ascending order
-      //and if createdAt is same then sort by id to show older messages start from top
-      convoJSON.messages.sort(function (a, b) {
-        return new Date(a.createdAt) - new Date(b.createdAt) || a.id - b.id;
+      convoJSON.messages.sort(function(a, b) {
+        return new Date(a.createdAt) - new Date(b.createdAt);
       });
 
       conversations[i] = convoJSON;
