@@ -18,10 +18,15 @@ router.get("/", async (req, res, next) => {
           user2Id: userId,
         },
       },
+<<<<<<< HEAD
       attributes: ["id", "unreads"],
       order: [[Message, "createdAt", "DESC"]],
+=======
+      attributes: ["id"],
+      order: [[Message, "createdAt", 'DESC']],
+>>>>>>> bugfix/sending-messages
       include: [
-        { model: Message, order: ["createdAt", "DESC"] },
+        { model: Message },
         {
           model: User,
           as: "user1",
@@ -73,6 +78,13 @@ router.get("/", async (req, res, next) => {
 
       // set properties for notification count and latest message preview
       convoJSON.latestMessageText = convoJSON.messages[0].text;
+
+      //sort messages by createdAt in ascending order
+      //and if createdAt is same then sort by id to show older messages start from top
+      convoJSON.messages.sort(function (a, b) {
+        return new Date(a.createdAt) - new Date(b.createdAt) || a.id - b.id;
+      });
+
       conversations[i] = convoJSON;
     }
 
