@@ -18,7 +18,7 @@ router.get("/", async (req, res, next) => {
           user2Id: userId,
         },
       },
-      attributes: ["id"],
+      attributes: ["id", "unreads"],
       order: [[Message, "createdAt", "DESC"]],
       include: [
         { model: Message, order: ["createdAt", "DESC"] },
@@ -60,6 +60,10 @@ router.get("/", async (req, res, next) => {
         delete convoJSON.user2;
       }
 
+      if (convoJSON.messages[0].senderId === userId) {
+        convoJSON.unreads = 0;
+      }
+
       // set property for online status of the other user
       if (onlineUsers.includes(convoJSON.otherUser.id)) {
         convoJSON.otherUser.online = true;
@@ -73,6 +77,21 @@ router.get("/", async (req, res, next) => {
     }
 
     res.json(conversations);
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post("/reset_unreads", async (req, res, next) => {
+  try {
+    const conversationId = req.body.id;
+
+    await Conversation.update(
+      { unreads: 0 },
+      { where: { id: conversationId} }
+    );
+    return res.json({ message: "Message unreads successfully reset!" });
+
   } catch (error) {
     next(error);
   }
