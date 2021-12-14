@@ -18,13 +18,8 @@ router.get("/", async (req, res, next) => {
           user2Id: userId,
         },
       },
-<<<<<<< HEAD
       attributes: ["id", "unreads"],
       order: [[Message, "createdAt", "DESC"]],
-=======
-      attributes: ["id"],
-      order: [[Message, "createdAt", 'DESC']],
->>>>>>> bugfix/sending-messages
       include: [
         { model: Message },
         {
