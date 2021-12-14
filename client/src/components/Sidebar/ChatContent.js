@@ -18,7 +18,7 @@ const useStyles = makeStyles((theme) => ({
   previewText: {
     fontSize: 12,
     color: "#9CADC8",
-    letterSpacing: -0.17,
+    letterSpacing: -0.17
   },
   unreadCounter: {
     fontSize: 10,
@@ -30,7 +30,7 @@ const ChatContent = (props) => {
   const classes = useStyles();
 
   const { conversation } = props;
-  const { latestMessageText, otherUser } = conversation;
+  const { latestMessageText, otherUser, unreads } = conversation;
 
   return (
     <Box className={classes.root}>
@@ -42,9 +42,11 @@ const ChatContent = (props) => {
           {latestMessageText}
         </Typography>
       </Box>
+      {unreads > 0 &&
       <Box>
-        <Chip className={classes.unreadCounter} size="small" color="primary" label="1" />
+        <Chip className={classes.unreadCounter} size="small" color="primary" label={unreads} />
       </Box>
+      }
     </Box>
   );
 };
