@@ -4,7 +4,10 @@ import {
   setNewMessage,
   removeOfflineUser,
   addOnlineUser,
+  addConversation
 } from "./store/conversations";
+
+import { resetDBUnreads } from "./store/helpers";
 
 const socket = io(window.location.origin);
 
@@ -18,9 +21,17 @@ socket.on("connect", () => {
   socket.on("remove-offline-user", (id) => {
     store.dispatch(removeOfflineUser(id));
   });
-  socket.on("new-message", (data) => {
-    const recipient = true;
-    store.dispatch(setNewMessage(data.message, data.sender, recipient));
+  socket.on("new-message", async (data) => {
+    const {activeConversation} = store.getState();
+    const conversationId = data.message.conversationId;
+    if (activeConversation && conversationId) {
+      await resetDBUnreads(conversationId)
+    }
+    if (data.isNewConversation) {
+      store.dispatch(addConversation(data.sender.id, data.message, data.sender, activeConversation || "None"));
+    } else {
+      store.dispatch(setNewMessage(data.message, activeConversation || "None"));
+    }
   });
 });
 

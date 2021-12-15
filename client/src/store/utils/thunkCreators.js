@@ -9,6 +9,7 @@ import {
 } from "../conversations";
 import { gotUser, setFetchingStatus } from "../user";
 import { setActiveChat } from "../activeConversation";
+import { resetDBUnreads } from "../helpers";
 
 axios.interceptors.request.use(async function (config) {
   const token = await localStorage.getItem("messenger-token");
@@ -89,6 +90,8 @@ const sendMessage = (data, body) => {
   socket.emit("new-message", {
     message: data.message,
     sender: data.sender,
+    recipientId: body.recipientId,
+    isNewConversation: !body.conversationId ? true : false
   });
 };
 
@@ -121,7 +124,7 @@ export const searchUsers = (searchTerm) => async (dispatch) => {
 export const resetUnreads = (conversation) => async (dispatch) => {
   try {
     if(conversation.unreads > 0) {
-      const data = await axios.post("/api/conversations/reset_unreads", { id: conversation.id });
+      await resetDBUnreads(conversation.id);
       dispatch(updateUnreads(conversation));
     }
     dispatch(setActiveChat(conversation.otherUser.username));
