@@ -24,7 +24,7 @@ socket.on("connect", () => {
   socket.on("new-message", async (data) => {
     const {activeConversation} = store.getState();
     const conversationId = data.message.conversationId;
-    if (activeConversation && conversationId) {
+    if (activeConversation && conversationId && data.sender && activeConversation === data.sender.username) {
       await resetDBUnreads(conversationId)
     }
     if (data.isNewConversation) {
