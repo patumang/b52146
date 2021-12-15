@@ -27,10 +27,10 @@ export const gotConversations = (conversations) => {
   };
 };
 
-export const setNewMessage = (message, sender, recipient) => {
+export const setNewMessage = (message, currentConversation) => {
   return {
     type: SET_MESSAGE,
-    payload: { message, sender: sender || null, recipient },
+    payload: { message, currentConversation },
   };
 };
 
@@ -62,10 +62,10 @@ export const clearSearchedUsers = () => {
 };
 
 // add new conversation when sending a new message
-export const addConversation = (recipientId, newMessage) => {
+export const addConversation = (recipientId, newMessage, sender, currentConversation) => {
   return {
     type: ADD_CONVERSATION,
-    payload: { recipientId, newMessage },
+    payload: { recipientId, newMessage, sender: sender || null, currentConversation },
   };
 };
 
@@ -95,11 +95,7 @@ const reducer = (state = [], action) => {
     case CLEAR_SEARCHED_USERS:
       return state.filter((convo) => convo.id);
     case ADD_CONVERSATION:
-      return addNewConvoToStore(
-        state,
-        action.payload.recipientId,
-        action.payload.newMessage
-      );
+      return addNewConvoToStore(state, action.payload);
     case UPDATE_UNREADS:
       return updateUnreadsToStore(state, action.conversation);
     default:
