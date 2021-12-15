@@ -1,25 +1,14 @@
 export const addMessageToStore = (state, payload) => {
-  const { message, sender, recipient } = payload;
-  // if sender isn't null, that means the message needs to be put in a brand new convo
-  if (sender !== null) {
-    //remove fakeconversation if already exist for the current sender
-    const newState = state.filter((convo) => convo.otherUser.id !== sender.id);
-    const newConvo = {
-      id: message.conversationId,
-      otherUser: sender,
-      messages: [message],
-      unreads: recipient ? 1 : 0
-    };
-    newConvo.latestMessageText = message.text;
-    return [newConvo, ...newState];
-  }
+  const { message, currentConversation } = payload;
 
   return state.map((convo) => {
     if (convo.id === message.conversationId) {
       const convoCopy = { ...convo };
       convoCopy.messages = [...convoCopy.messages, message ];
       convoCopy.latestMessageText = message.text;
-      if (recipient) {
+      if (currentConversation && 
+          (currentConversation === "None" || convoCopy.otherUser.username !== currentConversation)
+      ) {
         convoCopy.unreads = convoCopy.unreads + 1;
       }
       return convoCopy;
@@ -70,23 +59,40 @@ export const addSearchedUsersToStore = (state, users) => {
       newState.push(fakeConvo);
     }
   });
-
   return newState;
 };
 
-export const addNewConvoToStore = (state, recipientId, message) => {
+export const addNewConvoToStore = (state, payload) => {
+  const { recipientId, newMessage, sender, currentConversation } = payload;
+
+  if(sender) {
+    const isFakeConvoExist = state.some((convo) => { return (convo.otherUser.id === sender.id); });
+    if(!isFakeConvoExist) {
+      const newConvo = {
+        id: newMessage.conversationId,
+        otherUser: sender,
+        messages: [newMessage],
+        unreads: currentConversation ? 1 : 0
+      };
+      newConvo.latestMessageText = newMessage.text;
+      return [newConvo, ...state];
+    }
+  }
+
   return state.map((convo) => {
     if (convo.otherUser.id === recipientId) {
       const convoCopy = { ...convo };
-      convoCopy.id = message.conversationId;
-      convoCopy.messages = [...convoCopy.messages, message];
-      convoCopy.latestMessageText = message.text;
-      convoCopy.unreads = 0;
+      convoCopy.id = newMessage.conversationId;
+      convoCopy.messages = [...convoCopy.messages, newMessage];
+      convoCopy.latestMessageText = newMessage.text;
+      convoCopy.unreads = currentConversation &&
+        (currentConversation === "None" || convoCopy.otherUser.username !== currentConversation) ? 1 : 0;
       return convoCopy;
     } else {
       return convo;
     }
   });
+
 };
 
 export const updateUnreadsToStore = (state, conversation) => {
