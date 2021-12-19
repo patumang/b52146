@@ -1,5 +1,5 @@
 const router = require("express").Router();
-const { User, Conversation, Message } = require("../../db/models");
+const { User, Conversation, Message, MessageRead } = require("../../db/models");
 const { Op } = require("sequelize");
 const onlineUsers = require("../../onlineUsers");
 
@@ -18,7 +18,7 @@ router.get("/", async (req, res, next) => {
           user2Id: userId,
         },
       },
-      attributes: ["id", "unreads"],
+      attributes: ["id"],
       order: [[Message, "createdAt", "DESC"]],
       include: [
         { model: Message },
@@ -44,6 +44,12 @@ router.get("/", async (req, res, next) => {
           attributes: ["id", "username", "photoUrl"],
           required: false,
         },
+        {
+          model: MessageRead,
+          as: "messageReadStatus",
+          attributes: ["userId", "lastMessageRead"],
+          required: false,
+        },
       ],
     });
 
@@ -60,10 +66,6 @@ router.get("/", async (req, res, next) => {
         delete convoJSON.user2;
       }
 
-      if (convoJSON.messages[0].senderId === userId) {
-        convoJSON.unreads = 0;
-      }
-
       // set property for online status of the other user
       if (onlineUsers.includes(convoJSON.otherUser.id)) {
         convoJSON.otherUser.online = true;
@@ -71,10 +73,28 @@ router.get("/", async (req, res, next) => {
         convoJSON.otherUser.online = false;
       }
 
+      convoJSON.messageReadStatus = convoJSON.messageReadStatus.reduce((a, v) => ({ ...a, [v.userId]: v }), {});
+
+      //count unread messages of otheruser by calculating sum of messages from latest until message match with last seen message
+      let totalUnreads = 0;
+      for (const message of convoJSON.messages) {
+        if (message.senderId !== userId) {
+          const currentUserReadStatus = convoJSON.messageReadStatus[userId];
+          if (currentUserReadStatus && message.id === currentUserReadStatus.lastMessageRead) {
+            break;
+          }
+          totalUnreads++;
+        }
+      }
+      convoJSON.totalUnreads = totalUnreads;
+
+      const otherUserReadStatus = convoJSON.messageReadStatus[convoJSON.otherUser.id];
+      convoJSON.messageReadStatus = otherUserReadStatus ? otherUserReadStatus.lastMessageRead : "";
+
       // set properties for notification count and latest message preview
       convoJSON.latestMessageText = convoJSON.messages[0].text;
 
-      convoJSON.messages.sort(function(a, b) {
+      convoJSON.messages.sort(function (a, b) {
         return new Date(a.createdAt) - new Date(b.createdAt);
       });
 
@@ -87,15 +107,43 @@ router.get("/", async (req, res, next) => {
   }
 });
 
-router.post("/reset_unreads", async (req, res, next) => {
+router.put("/read_status", async (req, res, next) => {
   try {
-    const conversationId = req.body.id;
 
-    await Conversation.update(
-      { unreads: 0 },
-      { where: { id: conversationId} }
+    if (!req.user) {
+      return res.sendStatus(401);
+    }
+    const userId = req.user.id;
+    const { conversationId, messageId } = req.body;
+
+    const conversation = await Conversation.findOne({
+      where: {
+        id: conversationId,
+        [Op.or]: {
+          user1Id: userId,
+          user2Id: userId,
+        }
+      }
+    });
+    if (!conversation) {
+      return res.sendStatus(403);
+    }
+
+    let messageReadStatus = await MessageRead.findMessageRead(
+      userId,
+      conversationId
     );
-    return res.json({ message: "Message unreads successfully reset!" });
+
+    if (messageReadStatus) {
+      await MessageRead.update(
+        { lastMessageRead: messageId },
+        { where: { id: messageReadStatus.id } }
+      );
+      return res.sendStatus(204);
+    }
+
+    await MessageRead.create({ userId, conversationId, lastMessageRead: messageId });
+    return res.sendStatus(204);
 
   } catch (error) {
     next(error);
