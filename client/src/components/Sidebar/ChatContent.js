@@ -1,5 +1,5 @@
 import React from "react";
-import { Box, Typography, Chip } from "@material-ui/core";
+import { Box, Typography, Badge } from "@material-ui/core";
 import { makeStyles } from "@material-ui/core/styles";
 
 const useStyles = makeStyles((theme) => ({
@@ -23,10 +23,6 @@ const useStyles = makeStyles((theme) => ({
   unreadText: {
     color: "#000",
     fontWeight: 600
-  },
-  unreadCounter: {
-    fontSize: 10,
-    fontWeight: 600
   }
 }));
 
@@ -34,7 +30,7 @@ const ChatContent = (props) => {
   const classes = useStyles();
 
   const { conversation } = props;
-  const { latestMessageText, otherUser, unreads } = conversation;
+  const { latestMessageText, otherUser, totalUnreads } = conversation;
 
   return (
     <Box className={classes.root}>
@@ -42,14 +38,14 @@ const ChatContent = (props) => {
         <Typography className={classes.username}>
           {otherUser.username}
         </Typography>
-        <Typography className={unreads > 0 ? `${classes.previewText} ${classes.unreadText}` : `${classes.previewText}`}>
+        <Typography className={totalUnreads > 0 ? `${classes.previewText} ${classes.unreadText}` : `${classes.previewText}`}>
           {latestMessageText}
         </Typography>
       </Box>
-      {unreads > 0 &&
-      <Box>
-        <Chip className={classes.unreadCounter} size="small" color="primary" label={unreads} />
-      </Box>
+      {totalUnreads > 0 &&
+        <Box>
+          <Badge badgeContent={totalUnreads} color="primary" />
+        </Box>
       }
     </Box>
   );

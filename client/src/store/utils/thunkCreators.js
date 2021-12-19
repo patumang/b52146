@@ -9,7 +9,7 @@ import {
 } from "../conversations";
 import { gotUser, setFetchingStatus } from "../user";
 import { setActiveChat } from "../activeConversation";
-import { resetDBUnreads } from "../helpers";
+import { getLastSeenMessage } from "../helpers";
 
 axios.interceptors.request.use(async function (config) {
   const token = await localStorage.getItem("messenger-token");
@@ -89,9 +89,8 @@ const saveMessage = async (body) => {
 const sendMessage = (data, body) => {
   socket.emit("new-message", {
     message: data.message,
-    sender: data.sender,
     recipientId: body.recipientId,
-    isNewConversation: !body.conversationId ? true : false
+    sender: data.sender,
   });
 };
 
@@ -120,15 +119,45 @@ export const searchUsers = (searchTerm) => async (dispatch) => {
   }
 };
 
+const updateReadStatus = async (inputData) => {
+  await axios.put("/api/conversations/read_status", inputData);
+};
 
-export const resetUnreads = (conversation) => async (dispatch) => {
+const sendReadStatus = (message) => {
+  socket.emit("message-seen", { message });
+};
+
+export const loadActiveChat = (conversation) => async (dispatch) => {
   try {
-    if(conversation.unreads > 0) {
-      await resetDBUnreads(conversation.id);
+    if (conversation.totalUnreads > 0) {
       dispatch(updateUnreads(conversation));
     }
     dispatch(setActiveChat(conversation.otherUser.username));
+
+    const lastSeenMessage = getLastSeenMessage(conversation);
+    if (lastSeenMessage) {
+      await updateReadStatus({ conversationId: conversation.id, messageId: lastSeenMessage.id });
+      sendReadStatus(lastSeenMessage);
+    }
   } catch (error) {
     console.error(error);
+  }
+};
+
+export const compareActiveConversation = async (data) => {
+  const { message, sender, activeConversation, conversations } = data;
+  if (activeConversation) {
+    if (sender && sender.username === activeConversation) {
+      await updateReadStatus({ conversationId: message.conversationId, messageId: message.id });
+      sendReadStatus(message);
+    } else {
+      const isMessageSeen = conversations.some((convo) =>
+        convo.id === message.conversationId && convo.otherUser.username === activeConversation
+      );
+      if (isMessageSeen) {
+        await updateReadStatus({ conversationId: message.conversationId, messageId: message.id });
+        sendReadStatus(message);
+      }
+    }
   }
 };
