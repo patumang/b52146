@@ -4,6 +4,7 @@ import {
   addSearchedUsersToStore,
   removeOfflineUserFromStore,
   addMessageToStore,
+  updateMessageSeenToStore,
   updateUnreadsToStore,
 } from "./utils/reducerFunctions";
 
@@ -16,6 +17,7 @@ const REMOVE_OFFLINE_USER = "REMOVE_OFFLINE_USER";
 const SET_SEARCHED_USERS = "SET_SEARCHED_USERS";
 const CLEAR_SEARCHED_USERS = "CLEAR_SEARCHED_USERS";
 const ADD_CONVERSATION = "ADD_CONVERSATION";
+const UPDATE_MESSAGE_SEEN = "UPDATE_MESSAGE_SEEN";
 const UPDATE_UNREADS = "UPDATE_UNREADS";
 
 // ACTION CREATORS
@@ -27,10 +29,10 @@ export const gotConversations = (conversations) => {
   };
 };
 
-export const setNewMessage = (message, currentConversation) => {
+export const setNewMessage = (message, sender, activeConversation) => {
   return {
     type: SET_MESSAGE,
-    payload: { message, currentConversation },
+    payload: { message, sender: sender || null, activeConversation },
   };
 };
 
@@ -62,10 +64,17 @@ export const clearSearchedUsers = () => {
 };
 
 // add new conversation when sending a new message
-export const addConversation = (recipientId, newMessage, sender, currentConversation) => {
+export const addConversation = (recipientId, newMessage) => {
   return {
     type: ADD_CONVERSATION,
-    payload: { recipientId, newMessage, sender: sender || null, currentConversation },
+    payload: { recipientId, newMessage },
+  };
+};
+
+export const updateMessageSeen = (message) => {
+  return {
+    type: UPDATE_MESSAGE_SEEN,
+    payload: { message },
   };
 };
 
@@ -95,7 +104,13 @@ const reducer = (state = [], action) => {
     case CLEAR_SEARCHED_USERS:
       return state.filter((convo) => convo.id);
     case ADD_CONVERSATION:
-      return addNewConvoToStore(state, action.payload);
+      return addNewConvoToStore(
+        state,
+        action.payload.recipientId,
+        action.payload.newMessage
+      );
+    case UPDATE_MESSAGE_SEEN:
+      return updateMessageSeenToStore(state, action.payload);
     case UPDATE_UNREADS:
       return updateUnreadsToStore(state, action.conversation);
     default:
