@@ -13,11 +13,6 @@ router.post("/", async (req, res, next) => {
 
     // if we already know conversation id, we can save time and just add it to message and return
     if (conversationId) {
-      const conversation = await Conversation.findByPk(conversationId);
-      await Conversation.update(
-        { unreads: conversation.unreads + 1 },
-        { where: { id: conversationId } }
-      );
       const message = await Message.create({ senderId, text, conversationId });
       return res.json({ message, sender });
     }
@@ -32,16 +27,10 @@ router.post("/", async (req, res, next) => {
       conversation = await Conversation.create({
         user1Id: senderId,
         user2Id: recipientId,
-        unreads: 1,
       });
       if (onlineUsers.includes(sender.id)) {
         sender.online = true;
       }
-    } else {
-      await Conversation.update(
-        { unreads: conversation.unreads + 1 },
-        { where: { id: conversation.id} }
-      );
     }
     const message = await Message.create({
       senderId,
