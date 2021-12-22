@@ -4,7 +4,9 @@ import {
   setNewMessage,
   removeOfflineUser,
   addOnlineUser,
+  updateMessageSeen,
 } from "./store/conversations";
+import { checkActiveConversation } from "./store/utils/thunkCreators";
 
 const socket = io(window.location.origin);
 
@@ -19,7 +21,13 @@ socket.on("connect", () => {
     store.dispatch(removeOfflineUser(id));
   });
   socket.on("new-message", (data) => {
-    store.dispatch(setNewMessage(data.message, data.sender));
+    const { activeConversation, conversations } = store.getState();
+    store.dispatch(setNewMessage(data.message, data.sender, activeConversation || null));
+    checkActiveConversation({ ...data, activeConversation, conversations });
+  });
+
+  socket.on("message-seen", (data) => {
+    store.dispatch(updateMessageSeen(data.message));
   });
 });
 
