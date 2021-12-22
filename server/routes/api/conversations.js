@@ -129,16 +129,12 @@ router.put("/read_status", async (req, res, next) => {
       return res.sendStatus(403);
     }
 
-    let messageReadStatus = await MessageRead.findMessageRead(
-      userId,
-      conversationId
+    const messageRead = await MessageRead.update(
+      { lastMessageRead: messageId },
+      { where: { userId, conversationId } }
     );
 
-    if (messageReadStatus) {
-      await MessageRead.update(
-        { lastMessageRead: messageId },
-        { where: { id: messageReadStatus.id } }
-      );
+    if (messageRead[0] > 0) {
       return res.sendStatus(204);
     }
 

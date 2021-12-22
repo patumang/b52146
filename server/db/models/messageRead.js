@@ -8,12 +8,4 @@ const MessageRead = db.define('message_read', {
   }
 });
 
-MessageRead.findMessageRead = async function (userId, conversationId) {
-  const messageRead = await MessageRead.findOne({
-    where: { userId, conversationId }
-  });
-
-  return messageRead;
-};
-
 module.exports = MessageRead;
