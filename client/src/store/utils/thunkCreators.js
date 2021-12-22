@@ -144,7 +144,7 @@ export const loadActiveChat = (conversation) => async (dispatch) => {
   }
 };
 
-export const compareActiveConversation = async (data) => {
+export const checkActiveConversation = async (data) => {
   const { message, sender, activeConversation, conversations } = data;
   if (activeConversation) {
     if (sender && sender.username === activeConversation) {
