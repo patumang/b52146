@@ -1,11 +1,10 @@
 const Sequelize = require("sequelize");
 const db = require("../db");
 
-const MessageRead = db.define('message_read', {
+const ConversationUser = db.define('conversation_user', {
   lastMessageRead: {
     type: Sequelize.INTEGER,
-    allowNull: false,
   }
 });
 
-module.exports = MessageRead;
+module.exports = ConversationUser;
